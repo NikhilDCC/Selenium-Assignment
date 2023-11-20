@@ -1,3 +1,7 @@
+import com.itextpdf.text.Document;
+import com.itextpdf.text.Image;
+import com.itextpdf.text.PageSize;
+import com.itextpdf.text.pdf.PdfWriter;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.*;
@@ -7,7 +11,12 @@ import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import ru.yandex.qatools.ashot.AShot;
+import ru.yandex.qatools.ashot.Screenshot;
+import ru.yandex.qatools.ashot.shooting.ShootingStrategies;
+import javax.imageio.ImageIO;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
@@ -26,6 +35,7 @@ public class Test5 {
 
         // Create WebDriver instance
         WebDriver driver = new ChromeDriver(options);
+
 
         //Set Timeouts
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
@@ -80,7 +90,7 @@ public class Test5 {
         driver.navigate().back();
 
         // Scroll to the last part of the current page (possible once as it will load infinitely) and close any popup that comes if present.
-        js.executeScript("window.scrollTo(0, document.body.scrollHeight)");
+       // js.executeScript("window.scrollTo(0, document.body.scrollHeight)");
         try{ driver.findElement(By.id("btnClosePopUpBox")).click(); }
         catch(Exception e){
             System.out.println(e.getMessage());
@@ -93,18 +103,36 @@ public class Test5 {
         emailField.sendKeys("dummyemailid@example.com");
 
 
-        //Into view and Clear + paste chocolate name to the email field using Keyboard Actions
-        js.executeScript("arguments[0].scrollIntoView(true);", emailField);
+        //Clear + paste chocolate name to the email field
         actions.keyDown(Keys.CONTROL).sendKeys("a").sendKeys(Keys.BACK_SPACE).keyUp(Keys.CONTROL).sendKeys(chocolateName).build().perform();
-        
 
 
-        // Take screenshot
+        // Take screenshot using TakeScreenshot class only of current page
         String timestamp = new SimpleDateFormat("dd-MM-yyyy_HH-mm-ss").format(new Date());
-        String screenshotName = chocolateName + "_" + timestamp + ".png";
+        String screenshotNamePng = chocolateName + "_" + timestamp + ".png";
+        String screenshotNamePdf =chocolateName + "_" + timestamp + ".pdf";
         TakesScreenshot screenshot=(TakesScreenshot) driver;
         File srcF = screenshot.getScreenshotAs(OutputType.FILE);
-        FileUtils.copyFile(srcF,new File ("./Screenshot/"+screenshotName));
+        FileUtils.copyFile(srcF,new File ("./Screenshot/"+screenshotNamePng));
+
+        //Full Page Screenshot using Ashot then Storing into pdf using Itext
+        Screenshot Screenshot = new AShot()
+                .shootingStrategy(ShootingStrategies.viewportPasting(100))
+                .takeScreenshot(driver);
+        ImageIO.write(Screenshot.getImage(),"PNG",new File("./Screenshot/"+"Full_page"+screenshotNamePng));
+
+        Document document = new Document(PageSize.A0);
+        String input = "./Screenshot/"+"Full_page"+screenshotNamePng;
+        String output = "./Screenshot/"+"Full_Pdf"+screenshotNamePdf;
+        try {
+            FileOutputStream fos = new FileOutputStream(output);
+            PdfWriter writer = PdfWriter.getInstance(document, fos);
+            writer.open();
+            document.open();
+            document.add(Image.getInstance(input));
+            document.close();
+            writer.close();
+        }catch(Exception e){}
 
         // Close the browser window
         driver.quit();
