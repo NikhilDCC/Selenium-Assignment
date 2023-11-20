@@ -93,9 +93,10 @@ public class Test5 {
         emailField.sendKeys("dummyemailid@example.com");
 
 
-        //Clear + paste chocolate name to the email field
-        actions.keyDown(Keys.CONTROL).sendKeys("a").sendKeys(Keys.BACK_SPACE).keyUp(Keys.CONTROL).sendKeys(chocolateName).build().perform();
+        //Into view and Clear + paste chocolate name to the email field using Keyboard Actions
         js.executeScript("arguments[0].scrollIntoView(true);", emailField);
+        actions.keyDown(Keys.CONTROL).sendKeys("a").sendKeys(Keys.BACK_SPACE).keyUp(Keys.CONTROL).sendKeys(chocolateName).build().perform();
+        
 
 
         // Take screenshot
@@ -103,7 +104,7 @@ public class Test5 {
         String screenshotName = chocolateName + "_" + timestamp + ".png";
         TakesScreenshot screenshot=(TakesScreenshot) driver;
         File srcF = screenshot.getScreenshotAs(OutputType.FILE);
-        FileUtils.copyFile(srcF,new File ("./Screenshot/"+screenshotName+".png"));
+        FileUtils.copyFile(srcF,new File ("./Screenshot/"+screenshotName));
 
         // Close the browser window
         driver.quit();
